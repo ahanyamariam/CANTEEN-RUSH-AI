@@ -42,6 +42,4 @@ const orderSchema = new mongoose.Schema({
 
 orderSchema.index({ vendor: 1, status: 1, placedAt: 1 });
 orderSchema.index({ student: 1, status: 1 });
-orderSchema.index({ token: 1 });
-
 module.exports = mongoose.model('Order', orderSchema);
