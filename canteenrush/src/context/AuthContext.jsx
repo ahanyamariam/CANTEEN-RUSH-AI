@@ -8,10 +8,11 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount, check if we have a stored token
+  // ─── System Initialization ─────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
+      // Logic: Validate active session with backend
       api.get('/auth/me')
         .then((res) => {
           setUser(res.data.user);

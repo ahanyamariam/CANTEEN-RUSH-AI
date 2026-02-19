@@ -10,7 +10,7 @@ export function useVendors(showAll = false) {
     const endpoint = showAll ? '/vendors/all' : '/vendors';
     api.get(endpoint)
       .then((res) => setVendors(res.data.vendors))
-      .catch((err) => setError(err.response?.data?.error || err.message))
+      .catch((err) => setError(`[SYNC_ERROR] VENDOR_DATA_UNAVAILABLE`))
       .finally(() => setLoading(false));
   }, [showAll]);
 
@@ -26,29 +26,14 @@ export function useVendorMenu(vendorId) {
     setLoading(true);
     api.get(`/menu/vendor/${vendorId}`)
       .then((res) => setItems(res.data.items))
-      .catch(console.error)
+      .catch(() => console.error(`[MENU_SYNC] FAIL_ID_${vendorId}`))
       .finally(() => setLoading(false));
   }, [vendorId]);
 
   return { items, loading };
 }
 
-export function useVendorDetails(vendorId) {
-  const [vendor, setVendor] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!vendorId) return;
-    api.get(`/vendors/${vendorId}`)
-      .then((res) => setVendor(res.data.vendor))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [vendorId]);
-
-  return { vendor, loading };
-}
-
-// Vendor managing their own menu
+// Vendor: Internal Menu Management
 export function useManageMenu() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +43,7 @@ export function useManageMenu() {
       const { data } = await api.get(`/menu/vendor/${vendorId}`);
       setItems(data.items);
     } catch (err) {
-      console.error(err);
+      console.error('[KITCHEN_OS] MENU_FETCH_FAILED');
     } finally {
       setLoading(false);
     }
@@ -70,17 +55,27 @@ export function useManageMenu() {
     return data.item;
   };
 
-  const updateItem = async (itemId, updates) => {
-    const { data } = await api.patch(`/menu/${itemId}`, updates);
-    setItems((prev) => prev.map((i) => (i._id === itemId ? data.item : i)));
-    return data.item;
-  };
-
   const toggleAvailability = async (itemId) => {
     const { data } = await api.patch(`/menu/${itemId}/toggle`);
     setItems((prev) => prev.map((i) => (i._id === itemId ? data.item : i)));
     return data.item;
   };
 
-  return { items, loading, fetchMenu, addItem, updateItem, toggleAvailability };
+  return { items, loading, fetchMenu, addItem, toggleAvailability };
+}
+
+export function useVendorDetails(vendorId) {
+  const [vendor, setVendor] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!vendorId) return;
+    setLoading(true);
+    api.get(`/vendors/${vendorId}`)
+      .then((res) => setVendor(res.data.vendor))
+      .catch(() => console.error(`[VENDOR_SYNC] FAIL_ID_${vendorId}`))
+      .finally(() => setLoading(false));
+  }, [vendorId]);
+
+  return { vendor, loading };
 }

@@ -15,71 +15,70 @@ export default function RegisterVendor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (form.password !== form.confirmPassword) return setError('Passwords do not match');
-    if (form.password.length < 6) return setError('Password must be at least 6 characters');
-    if (!form.shopName.trim()) return setError('Shop name is required');
+    if (form.password !== form.confirmPassword) return setError('[ERR] CODE_MISMATCH');
+    if (!form.shopName.trim()) return setError('[ERR] SHOP_IDENTIFIER_MISSING');
 
     setLoading(true);
     try {
       await register({ ...form, role: 'vendor' });
       navigate('/vendor/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      setError(`[ERR] REGISTRY_FAILED: ${err.response?.data?.error || 'INTERNAL_ERROR'}`);
     } finally {
       setLoading(false);
     }
   };
 
   const fields = [
-    { key: 'name', label: 'Your Name', type: 'text', placeholder: 'Raj Kumar' },
-    { key: 'shopName', label: 'Shop / Canteen Name', type: 'text', placeholder: "Raj's South Indian" },
-    { key: 'email', label: 'Email', type: 'email', placeholder: 'raj@vendor.com' },
-    { key: 'phone', label: 'Phone', type: 'tel', placeholder: '9876543210' },
-    { key: 'password', label: 'Password', type: 'password', placeholder: 'Min 6 characters' },
-    { key: 'confirmPassword', label: 'Confirm Password', type: 'password', placeholder: 'Retype password' },
+    { key: 'name', label: 'Operator_Name' },
+    { key: 'shopName', label: 'Store_Identifier / Name' },
+    { key: 'email', label: 'Registry_Email' },
+    { key: 'phone', label: 'Comms_Link / Phone' },
+    { key: 'password', label: 'Secret_Key' },
+    { key: 'confirmPassword', label: 'Verify_Key' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-green-600 rounded-full filter blur-[200px] opacity-10"></div>
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-600 rounded-full filter blur-[180px] opacity-10"></div>
+    <div className="min-h-screen bg-ferro-mint flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="max-w-md w-full relative z-10">
+        <Link to="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-ferro-black/40 hover:text-ferro-black mb-12 transition-colors">
+          [ ← ] TERMINATE_REGISTRY
+        </Link>
 
-      <div className="max-w-sm w-full relative z-10">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white mb-8 transition">← Back</Link>
-
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-green-500/30">
-              <span className="text-3xl">👨‍🍳</span>
-            </div>
-            <h1 className="text-2xl font-bold text-white">Vendor Sign Up</h1>
-            <p className="text-sm text-gray-400 mt-1">Register your food stall</p>
+        <div className="bg-white border border-ferro-black/10 p-10 lg:p-16 shadow-2xl">
+          <div className="text-center mb-10">
+            <div className="w-12 h-12 bg-ferro-black flex items-center justify-center mx-auto mb-6 text-white text-xs font-black">VN</div>
+            <h1 className="text-4xl font-black text-ferro-black uppercase tracking-tighter">Vendor_Registry</h1>
+            <p className="text-[10px] font-bold text-ferro-black/40 uppercase tracking-widest mt-2">Create Node Instance</p>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-3 rounded-xl mb-4">{error}</div>
+            <div className="bg-ferro-orange/10 border border-ferro-orange/20 text-ferro-orange text-[10px] font-black uppercase tracking-widest p-4 mb-8">
+              {error}
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {fields.map((f) => (
               <div key={f.key}>
-                <label className="block text-xs font-medium text-gray-400 mb-1">{f.label}</label>
+                <label className="block text-[9px] font-black text-ferro-black/40 uppercase tracking-[0.2em] mb-1">{f.label}</label>
                 <input
-                  type={f.type} value={form[f.key]} onChange={update(f.key)}
-                  required={f.key !== 'phone'} placeholder={f.placeholder}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:ring-2 focus:ring-green-500/50 focus:border-transparent outline-none text-sm transition"
+                  type={f.key.includes('password') ? 'password' : 'text'} 
+                  value={form[f.key]} onChange={update(f.key)}
+                  required={f.key !== 'phone'}
+                  className="w-full px-0 py-2.5 bg-transparent border-b border-ferro-black/10 rounded-none text-ferro-black font-bold focus:border-ferro-orange outline-none transition-colors"
                 />
               </div>
             ))}
             <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 disabled:opacity-50 shadow-lg shadow-green-600/30 transition-all mt-2">
-              {loading ? 'Registering...' : 'Register My Shop'}
+              className="w-full py-4 bg-ferro-orange text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-ferro-black transition-colors mt-8">
+              {loading ? 'REGISTERING...' : 'CONFIRM_REGISTRATION [ → ]'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Already registered?{' '}
-            <Link to="/login?role=vendor" className="font-semibold text-green-400 hover:text-green-300">Sign in</Link>
+          <p className="text-center text-[10px] font-bold text-ferro-black/40 uppercase tracking-widest mt-10">
+            Node already exists?{' '}
+            <Link to="/login?role=vendor" className="text-ferro-black underline underline-offset-4 hover:text-ferro-orange">SIGN_IN</Link>
           </p>
         </div>
       </div>

@@ -1,53 +1,42 @@
-import { Brain, Clock, TrendingUp, Users, Zap } from 'lucide-react';
+import { Activity, Clock, Layers, Users, TrendingUp } from 'lucide-react';
 
 export default function PredictionCard({ prediction }) {
   if (!prediction) return null;
-
-  const { estimatedMinutes, confidence, breakdown, window: timeWindow } = prediction;
+  const { estimatedMinutes, confidence, breakdown } = prediction;
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl border border-indigo-100 p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="p-1.5 bg-primary/10 rounded-lg">
-          <Brain size={18} className="text-primary" />
+    <div className="bg-white border border-ferro-black/10 p-8">
+      <div className="flex justify-between items-start mb-8">
+        <div className="flex items-center gap-2">
+          <Activity size={14} className="text-ferro-orange" />
+          <span className="text-[10px] font-black uppercase tracking-[0.3em]">Neural Prediction Protocol</span>
         </div>
-        <h3 className="font-semibold text-gray-900 text-sm">AI Prediction Engine</h3>
-        <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-          {confidence}% confidence
+        <span className="text-[10px] font-black border border-ferro-orange text-ferro-orange px-2 py-1">
+          {confidence}% CONFIDENCE
         </span>
       </div>
 
-      <div className="text-center mb-4">
-        <div className="text-4xl font-bold text-primary">
-          ~{estimatedMinutes} <span className="text-lg font-medium text-gray-500">min</span>
-        </div>
-        <p className="text-xs text-gray-500 mt-1">estimated wait time</p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-white rounded-xl p-2.5 border border-gray-100">
-          <Clock size={14} className="text-blue-500 mx-auto mb-1" />
-          <div className="text-sm font-semibold text-gray-900">{breakdown.prepTime}m</div>
-          <div className="text-[10px] text-gray-500">Prep Time</div>
-        </div>
-        <div className="bg-white rounded-xl p-2.5 border border-gray-100">
-          <Users size={14} className="text-amber-500 mx-auto mb-1" />
-          <div className="text-sm font-semibold text-gray-900">{breakdown.queueDelay}m</div>
-          <div className="text-[10px] text-gray-500">Queue Delay</div>
-        </div>
-        <div className="bg-white rounded-xl p-2.5 border border-gray-100">
-          <TrendingUp size={14} className="text-red-500 mx-auto mb-1" />
-          <div className="text-sm font-semibold text-gray-900">{breakdown.rushMultiplier}x</div>
-          <div className="text-[10px] text-gray-500">{breakdown.rushLabel}</div>
+      <div className="mb-10">
+        <span className="text-[9px] font-bold text-ferro-black/40 uppercase tracking-widest block mb-2">Calculated_Wait_Time</span>
+        <div className="text-8xl font-black tracking-tighter leading-none">
+          {estimatedMinutes}<span className="text-xl text-ferro-black/20 ml-2">MIN</span>
         </div>
       </div>
 
-      {timeWindow && (
-        <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-500">
-          <Zap size={12} className="text-amber-500" />
-          <span>Pickup window: ±{timeWindow.margin} min</span>
+      <div className="grid grid-cols-3 divide-x divide-ferro-black/10 border-t border-ferro-black/10 pt-8">
+        <div className="pr-4">
+          <p className="text-[9px] font-bold text-ferro-black/40 uppercase mb-1">Raw_Prep</p>
+          <p className="text-xl font-black">{breakdown.prepTime}m</p>
         </div>
-      )}
+        <div className="px-4">
+          <p className="text-[9px] font-bold text-ferro-black/40 uppercase mb-1">Queue_Load</p>
+          <p className="text-xl font-black">{breakdown.queueDelay}m</p>
+        </div>
+        <div className="pl-4">
+          <p className="text-[9px] font-bold text-ferro-black/40 uppercase mb-1">Volatility</p>
+          <p className="text-xl font-black text-ferro-orange">{breakdown.rushMultiplier}x</p>
+        </div>
+      </div>
     </div>
   );
 }

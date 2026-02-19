@@ -12,36 +12,40 @@ class PredictionEngine {
     });
 
     const context = await this._buildContext(orderData, vendor, menuItems);
-
-    // 1. Always compute deterministic baseline
+    
+    // 1. Compute safety baseline
     const deterministic = this._deterministicPredict(context);
 
-    // 2. Try Gemini enhancement
+    // 2. Try Gemini AI
     let geminiResult = null;
-    let finalEstimate;
+    let finalEstimate; 
     let method;
 
     try {
       geminiResult = await geminiService.predictPrepTime(context);
     } catch (e) {
-      console.warn('Gemini unavailable, deterministic fallback');
+      console.warn('⚠️ Gemini fallback triggered:', e.message);
     }
 
-    if (geminiResult && geminiResult.estimatedMinutes) {
-      // Hybrid blend: weight by Gemini confidence × vendor accuracy history
-      const gw = geminiResult.confidence * vendor.metrics.accuracyScore;
+    // 3. Robust check for AI results
+    const aiMinutes = geminiResult?.estimatedMinutes || geminiResult?.estimated_prep_minutes;
+
+    if (geminiResult && aiMinutes) {
+      // Logic: Prioritize AI but blend with rules for safety
+      const gw = (geminiResult.confidence || 0.5) * (vendor.metrics?.accuracyScore || 0.8);
       const dw = 1 - gw;
-      finalEstimate = Math.round(
-        geminiResult.estimatedMinutes * gw + deterministic.estimatedMinutes * dw
-      );
-      method = 'hybrid';
+      
+      finalEstimate = Math.round(aiMinutes * gw + deterministic.estimatedMinutes * dw);
+      method = 'hybrid'; 
+      console.log(`✅ Gemini Response Used: ${aiMinutes} mins`);
     } else {
       finalEstimate = deterministic.estimatedMinutes;
       method = 'deterministic';
+      console.log("⚠️ Using Rule-based logic");
     }
 
+    // 4. Final Sanity Bounds (2 - 45 mins)
     finalEstimate = Math.max(2, Math.min(45, finalEstimate));
-
     const predictedReadyTime = new Date(Date.now() + finalEstimate * 60000);
 
     return {
@@ -55,10 +59,13 @@ class PredictionEngine {
     };
   }
 
+  /**
+   * Math-based baseline logic (Deterministic)
+   */
   _deterministicPredict(ctx) {
     const basePrepTime = ctx.basePrepTimes.reduce((s, t) => s + t, 0);
     const parallelBatches = Math.ceil(ctx.queueDepth / Math.max(ctx.maxConcurrent, 1));
-    const queueWait = parallelBatches * ctx.vendorAvgPrepTime;
+    const queueWait = parallelBatches * (ctx.vendorAvgPrepTime || 5);
     const rushMultiplier = ctx.isRushHour ? (ctx.rushMultiplier || 1.3) : 1.0;
 
     const complexityBonus = ctx.itemComplexities.reduce((s, c) => {
@@ -77,7 +84,7 @@ class PredictionEngine {
     return {
       estimatedMinutes: Math.max(2, total),
       confidence: 0.65,
-      reasoning: `~${basePrepTime} min prep, ${ctx.queueDepth} orders ahead${ctx.isRushHour ? ', rush hour' : ''}.`,
+      reasoning: `~${basePrepTime} min prep, ${ctx.queueDepth} orders ahead.`,
       breakdown: {
         queue_wait_minutes: Math.round(queueWait),
         active_prep_minutes: basePrepTime + complexityBonus,
@@ -112,16 +119,6 @@ class PredictionEngine {
         ? Math.round((o.actualReadyTime - o.placedAt) / 60000) : null,
     }));
 
-    const recentLogs = await PredictionLog.find({ vendor: vendor._id })
-      .sort({ createdAt: -1 }).limit(50).lean();
-
-    let avgPredictionError = 0;
-    if (recentLogs.length > 0) {
-      const errors = recentLogs.map(l => l.errorMinutes).filter(e => e != null);
-      avgPredictionError = errors.length
-        ? errors.reduce((s, e) => s + e, 0) / errors.length : 0;
-    }
-
     return {
       items: menuItems.map(m => ({
         name: m.name,
@@ -141,14 +138,13 @@ class PredictionEngine {
       activeOrders,
       queueDepth,
       maxConcurrent: vendor.maxConcurrentOrders,
-      vendorAvgPrepTime: vendor.metrics.avgActualPrepTime,
+      vendorAvgPrepTime: vendor.metrics?.avgActualPrepTime || 5,
       currentTime: now.toISOString(),
       dayOfWeek: days[now.getDay()],
       isRushHour: hour >= 11 && hour <= 13,
-      avgPredictionError: Math.round(avgPredictionError * 10) / 10,
-      rushMultiplier: vendor.metrics.peakHourMultiplier,
-      recentTrend: avgPredictionError > 2 ? 'underpredicting'
-        : avgPredictionError < -2 ? 'overpredicting' : 'accurate',
+      avgPredictionError: vendor.metrics?.avgPredictionError || 0,
+      rushMultiplier: vendor.metrics?.peakHourMultiplier || 1.2,
+      recentTrend: "accurate",
       recentCompletedOrders,
     };
   }
@@ -175,20 +171,6 @@ class PredictionEngine {
         totalItems: order.items.length,
       },
     });
-
-    // Update vendor rolling accuracy
-    const logs = await PredictionLog.find({ vendor: order.vendor })
-      .sort({ createdAt: -1 }).limit(100).lean();
-
-    if (logs.length >= 5) {
-      const errors = logs.map(l => l.absoluteError);
-      const within3 = errors.filter(e => e <= 3).length / errors.length;
-      await Vendor.findByIdAndUpdate(order.vendor, {
-        'metrics.avgActualPrepTime':
-          logs.reduce((s, l) => s + l.actualMinutes, 0) / logs.length,
-        'metrics.accuracyScore': within3,
-      });
-    }
   }
 }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, ChevronRight } from 'lucide-react';
+import { Activity, ArrowRight, History } from 'lucide-react';
 import api from '../../api/axios';
 
 export default function MyOrders() {
@@ -14,7 +14,7 @@ export default function MyOrders() {
         const { data } = await api.get('/orders/my');
         setOrders(data.orders || []);
       } catch (err) {
-        console.error('Error fetching orders:', err);
+        console.error('[NETWORK] DATA_LOG_FETCH_FAILED', err);
       } finally {
         setLoading(false);
       }
@@ -22,114 +22,52 @@ export default function MyOrders() {
     fetchOrders();
   }, []);
 
-  const statusColors = {
-    placed: 'bg-yellow-100 text-yellow-800',
-    confirmed: 'bg-blue-100 text-blue-800',
-    preparing: 'bg-orange-100 text-orange-800',
-    ready: 'bg-green-100 text-green-800',
-    collected: 'bg-gray-100 text-gray-800',
-    cancelled: 'bg-red-100 text-red-800',
-  };
-
   const timeAgo = (dateStr) => {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffHours < 24) return `${diffHours} hr ago`;
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    const mins = Math.floor((new Date() - new Date(dateStr)) / 60000);
+    if (mins < 60) return `${mins}M_AGO`;
+    return `${Math.floor(mins / 60)}H_AGO`;
   };
 
-  const getTimeRemaining = (readyTime) => {
-    if (!readyTime) return null;
-    const now = new Date();
-    const ready = new Date(readyTime);
-    const diffMs = ready - now;
-    if (diffMs <= 0) return 'Ready!';
-    const mins = Math.ceil(diffMs / 60000);
-    return `~${mins} min`;
-  };
-
-  if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-        <div className="text-4xl mb-4 animate-pulse">📋</div>
-        <p className="text-gray-500">Loading orders...</p>
-      </div>
-    );
-  }
-
-  if (orders.length === 0) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-        <div className="text-6xl mb-4">📋</div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">No orders yet</h2>
-        <p className="text-gray-500 text-sm mb-6">Your orders will appear here after you place one</p>
-        <button
-          onClick={() => navigate('/student')}
-          className="bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors"
-        >
-          Browse Vendors
-        </button>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-20 text-center font-black text-[10px]">SCANNING_HISTORY...</div>;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-xl font-bold text-gray-900 mb-6">My Orders</h1>
+    <div className="max-w-4xl mx-auto p-6 lg:p-12 pb-24">
+      <header className="mb-12 border-b border-ferro-black/10 pb-8">
+        <span className="text-[10px] font-black tracking-[0.4em] text-ferro-black/40 uppercase">Archival_Storage</span>
+        <h1 className="text-5xl font-black tracking-tighter uppercase mt-2 text-ferro-black">Transaction<br />Registry</h1>
+      </header>
 
-      <div className="grid gap-4">
-        {orders.map((order, i) => {
-          const remaining = getTimeRemaining(order.predictedReadyTime);
-          return (
+      {orders.length === 0 ? (
+        <div className="p-20 border border-dashed border-ferro-black/20 text-center">
+          <p className="text-[10px] font-black text-ferro-black/40 uppercase">No Data Found</p>
+        </div>
+      ) : (
+        <div className="grid gap-px bg-ferro-black/10 border border-ferro-black/10">
+          {orders.map((order, i) => (
             <button
               key={order._id}
-              onClick={() => navigate(`/student/order/${order.token}`)}
-              className="bg-white rounded-2xl p-4 border border-gray-100 text-left hover:shadow-md transition-all hover:border-primary/20 animate-slide-up"
-              style={{ animationDelay: `${i * 0.05}s` }}
+              onClick={() => navigate(`/student/track/${order.token}`)}
+              className="bg-white p-6 text-left flex justify-between items-center group hover:bg-ferro-offwhite transition-colors"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-gray-900 text-lg font-mono">{order.token}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[order.status] || 'bg-gray-100'}`}>
-                      {order.status?.toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    🍽️ {order.vendor?.shopName || 'Vendor'} · {timeAgo(order.placedAt)}
-                  </p>
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl font-black font-mono tracking-tighter text-ferro-black">{order.token}</span>
+                  <span className={`text-[8px] font-black px-2 py-0.5 border ${
+                    order.status === 'collected' ? 'border-ferro-black/20 text-ferro-black/40' : 'border-ferro-orange text-ferro-orange'
+                  }`}>
+                    {order.status?.toUpperCase()}
+                  </span>
                 </div>
-                <ChevronRight size={16} className="text-gray-300 mt-1" />
+                <p className="text-[9px] font-bold text-ferro-black/40 mt-1 uppercase tracking-widest">
+                  Node / {order.vendor?.shopName} · {timeAgo(order.placedAt)}
+                </p>
               </div>
-
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-gray-500">
-                  {order.items?.map(i => i.menuItem?.name || 'Item').join(', ')}
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-gray-900">
-                    ₹{order.items?.reduce((s, i) => s + (i.menuItem?.price || 0) * (i.quantity || 1), 0) || 0}
-                  </div>
-                  {remaining && order.status !== 'collected' && order.status !== 'cancelled' && (
-                    <div className="flex items-center gap-1 text-xs text-primary mt-0.5">
-                      <Clock size={11} />
-                      {remaining}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ArrowRight size={16} className="text-ferro-black/20 group-hover:text-ferro-orange group-hover:translate-x-1 transition-all" />
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../api/axios';
 import { getSocket } from '../api/socket';
 
-// Student: place order
+// Student: Place Order Protocol
 export function usePlaceOrder() {
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState(null);
@@ -14,7 +14,7 @@ export function usePlaceOrder() {
       const { data } = await api.post('/orders', { vendorId, items, desiredPickupTime });
       return data.order;
     } catch (err) {
-      const msg = err.response?.data?.error || err.message;
+      const msg = `[SYNC_ERROR] ${err.response?.data?.error || err.message}`;
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -25,7 +25,7 @@ export function usePlaceOrder() {
   return { placeOrder, placing, error };
 }
 
-// Student: active orders with real-time
+// Student: Active Orders (Real-Time Sync)
 export function useActiveOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,7 @@ export function useActiveOrders() {
       const { data } = await api.get('/orders/active');
       setOrders(data.orders);
     } catch (err) {
-      console.error(err);
+      console.error('[NETWORK] FETCH_FAILED', err);
     } finally {
       setLoading(false);
     }
@@ -48,9 +48,12 @@ export function useActiveOrders() {
       socket.on('order:updated', fetch);
       socket.on('order:ready', (data) => {
         fetch();
-        // Browser notification
+        // Technical Browser Notification
         if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('🍽️ Order Ready!', { body: data.message });
+          new Notification('[STATUS] ORDER_READY', {
+            body: `${data.message} / TOKEN: ${data.token || 'N/A'}`,
+            icon: '/favicon.ico' // Ensure this is a clean geometric icon
+          });
         }
       });
       socket.on('order:preparing', fetch);
@@ -60,7 +63,7 @@ export function useActiveOrders() {
         socket.off('order:preparing', fetch);
       };
     }
-    // Fallback polling
+    // Technical fallback sync
     const interval = setInterval(fetch, 15000);
     return () => clearInterval(interval);
   }, [fetch]);
@@ -73,22 +76,7 @@ export function useActiveOrders() {
   return { orders, loading, refetch: fetch, cancelOrder };
 }
 
-// Student: order history
-export function useOrderHistory() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get('/orders/my')
-      .then((res) => setOrders(res.data.orders))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  return { orders, loading };
-}
-
-// Public: track by token
+// Public: Track by Token
 export function useTrackOrder(token) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -103,7 +91,7 @@ export function useTrackOrder(token) {
       const { data } = await api.get(`/orders/track/${searchToken}`);
       setOrder(data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Order not found');
+      setError(`[ERROR] TOKEN_NOT_FOUND: ${searchToken}`);
       setOrder(null);
     } finally {
       setLoading(false);
@@ -117,7 +105,7 @@ export function useTrackOrder(token) {
   return { order, loading, error, track };
 }
 
-// Vendor: live queue
+// Vendor: Live Kitchen Queue
 export function useVendorQueue() {
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -127,7 +115,7 @@ export function useVendorQueue() {
       const { data } = await api.get('/orders/vendor/queue');
       setQueue(data.queue);
     } catch (err) {
-      console.error(err);
+      console.error('[KITCHEN_SYNC] FAILED', err);
     } finally {
       setLoading(false);
     }
@@ -163,21 +151,51 @@ export function useVendorQueue() {
   return { queue, loading, updateStatus, collectByToken, refetch: fetch };
 }
 
-// Vendor: order history + stats
+// Student: Order History
+export function useOrderHistory() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetch = useCallback(async () => {
+    try {
+      const { data } = await api.get('/orders/history');
+      setOrders(data.orders);
+    } catch (err) {
+      console.error('[NETWORK] HISTORY_FETCH_FAILED', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  return { orders, loading, refetch: fetch };
+}
+
+// Vendor: Order History and Stats
 export function useVendorHistory(days = 7) {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    api.get(`/orders/vendor/history?days=${days}`)
-      .then((res) => {
-        setOrders(res.data.orders);
-        setStats(res.data.stats);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+  const fetch = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get(`/orders/vendor/history?days=${days}`);
+      setOrders(data.orders);
+      setStats(data.stats);
+    } catch (err) {
+      console.error('[KITCHEN_OS] HISTORY_SYNC_FAILED', err);
+    } finally {
+      setLoading(false);
+    }
   }, [days]);
 
-  return { orders, stats, loading };
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  return { orders, stats, loading, refetch: fetch };
 }

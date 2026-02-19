@@ -4,81 +4,69 @@ import { useActiveOrders, useOrderHistory } from '../../hooks/useOrders';
 
 export default function ActiveOrders() {
   const { orders: active, loading: al, cancelOrder } = useActiveOrders();
-  const { orders: history, loading: hl } = useOrderHistory();
+  const { orders: history } = useOrderHistory();
+
   const past = history.filter((o) => ['collected', 'cancelled'].includes(o.status));
 
   return (
-    <div className="max-w-2xl mx-auto p-4 pb-20">
-      <h1 className="text-3xl font-black text-white mb-6 pt-2">My Orders</h1>
-
-      {/* Active */}
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Active</p>
-      {al ? (
-        <div className="bg-white/5 rounded-2xl p-8 text-center"><div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div></div>
-      ) : active.length === 0 ? (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center mb-8">
-          <p className="text-gray-500">No active orders</p>
-          <Link to="/student/vendors" className="text-blue-400 text-sm mt-1 inline-block">Order now →</Link>
+    <div className="max-w-4xl mx-auto p-6 lg:p-12 pb-24 bg-ferro-offwhite">
+      <header className="mb-12 border-b border-ferro-black/10 pb-8 flex justify-between items-end">
+        <div>
+          <span className="text-[10px] font-black tracking-[0.4em] text-ferro-black/30 uppercase">Log_Registry</span>
+          <h1 className="text-5xl font-black tracking-tighter uppercase mt-2">Transaction<br />Monitor</h1>
         </div>
-      ) : (
-        <div className="space-y-3 mb-8">
-          {active.map((order) => (
-            <div key={order._id} className="bg-white/5 border border-white/10 rounded-2xl p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="font-mono font-bold text-lg text-white">{order.token}</span>
-                  <p className="text-sm text-gray-500">{order.vendor?.shopName}</p>
+      </header>
+
+      {/* ACTIVE_JOBS SECTION */}
+      <section className="mb-16">
+        <h2 className="text-[10px] font-black text-ferro-orange uppercase tracking-[0.3em] mb-6">/ ACTIVE_JOBS</h2>
+        {al ? (
+          <div className="p-10 border border-ferro-black/5 text-[10px] font-black italic">SCANNING_ACTIVE_NODES...</div>
+        ) : active.length === 0 ? (
+          <div className="p-10 border border-dashed border-ferro-black/20 text-center">
+            <p className="text-[10px] font-black text-ferro-black/40 uppercase">No Active Transactions Detected</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {active.map((order) => (
+              <div key={order._id} className="bg-white border border-ferro-black/10 p-6 flex justify-between items-center group hover:border-ferro-black transition-colors">
+                <div className="flex-1">
+                  <div className="flex items-center gap-4">
+                    <span className="text-2xl font-black tracking-widest text-ferro-black">{order.token}</span>
+                    <span className={`text-[9px] font-black px-2 py-1 uppercase tracking-widest ${order.status === 'ready' ? 'bg-ferro-orange text-white animate-pulse' : 'bg-ferro-black text-white'
+                      }`}>{order.status}</span>
+                  </div>
+                  <p className="text-[10px] font-bold text-ferro-black/40 mt-2 uppercase tracking-widest">
+                    {order.vendor?.shopName} / {order.items.length} UNITS
+                  </p>
                 </div>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                  order.status === 'ready' ? 'bg-green-500/20 text-green-400 animate-pulse' :
-                  order.status === 'preparing' ? 'bg-orange-500/20 text-orange-400' :
-                  order.status === 'confirmed' ? 'bg-blue-500/20 text-blue-400' :
-                  'bg-yellow-500/20 text-yellow-400'
-                }`}>{order.status.toUpperCase()}</span>
+
+                <div className="text-right flex flex-col items-end gap-3">
+                  <Link to={`/student/track/${order.token}`} className="text-[10px] font-black text-ferro-black underline underline-offset-4 hover:text-ferro-orange uppercase">View_Details</Link>
+                  {['placed', 'confirmed'].includes(order.status) && (
+                    <button onClick={() => cancelOrder(order._id)} className="text-[9px] font-black text-red-600 uppercase hover:underline">Abort_Order [X]</button>
+                  )}
+                </div>
               </div>
-              <div className="mt-2 text-sm text-gray-400">
-                {order.items.map((item, i) => (
-                  <span key={i}>{item.quantity}× {item.menuItem?.name}{i < order.items.length - 1 ? ', ' : ''}</span>
-                ))}
-              </div>
-              <div className="mt-2 flex justify-between items-center">
-                <p className="text-xs text-gray-600">
-                  ₹{order.totalPrice}
-                  {order.predictedReadyTime && ` · ETA ${new Date(order.predictedReadyTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                </p>
-                {['placed', 'confirmed'].includes(order.status) && (
-                  <button onClick={() => cancelOrder(order._id)} className="text-xs text-red-400 hover:text-red-300 transition">Cancel</button>
-                )}
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ARCHIVED_DATA SECTION */}
+      <section>
+        <h2 className="text-[10px] font-black text-ferro-black/40 uppercase tracking-[0.3em] mb-6">/ ARCHIVED_DATA</h2>
+        <div className="bg-white border border-ferro-black/10 divide-y divide-ferro-black/5">
+          {past.map((order) => (
+            <div key={order._id} className="p-4 flex justify-between items-center opacity-60 hover:opacity-100 transition-opacity">
+              <span className="text-xs font-black text-ferro-black font-mono tracking-tighter">{order.token} / {order.vendor?.shopName}</span>
+              <div className="text-right">
+                <span className="text-[9px] font-bold text-ferro-black/40 uppercase">{order.status} / ₹{order.totalPrice}</span>
               </div>
             </div>
           ))}
         </div>
-      )}
-
-      {/* Past */}
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">History</p>
-      {hl ? (
-        <div className="text-gray-600 text-center py-4">Loading...</div>
-      ) : past.length === 0 ? (
-        <p className="text-gray-600 text-center py-4">No past orders</p>
-      ) : (
-        <div className="space-y-2">
-          {past.slice(0, 10).map((order) => (
-            <div key={order._id} className="bg-white/[0.03] border border-white/5 rounded-xl p-3">
-              <div className="flex justify-between">
-                <div>
-                  <span className="font-mono text-sm font-medium text-gray-400">{order.token}</span>
-                  <span className="text-xs text-gray-600 ml-2">{order.vendor?.shopName}</span>
-                </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  order.status === 'collected' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-                }`}>{order.status}</span>
-              </div>
-              <p className="text-xs text-gray-600 mt-1">{new Date(order.placedAt).toLocaleDateString()} · ₹{order.totalPrice}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      </section>
     </div>
   );
 }

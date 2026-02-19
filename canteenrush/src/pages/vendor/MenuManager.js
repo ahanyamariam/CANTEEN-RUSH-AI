@@ -4,80 +4,47 @@ import { useManageMenu } from '../../hooks/useVendors';
 
 export default function MenuManager() {
   const { user } = useAuth();
-  const { items, loading, fetchMenu, addItem, toggleAvailability } = useManageMenu();
+  const { items, fetchMenu, toggleAvailability } = useManageMenu();
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ name: '', price: '', basePrepTimeMinutes: '', category: 'snack', complexity: 'simple' });
 
-  useEffect(() => { if (user?.vendorProfile) fetchMenu(user.vendorProfile); }, [user, fetchMenu]);
-
-  const handleAdd = async (e) => {
-    e.preventDefault();
-    await addItem({ ...form, price: Number(form.price), basePrepTimeMinutes: Number(form.basePrepTimeMinutes) });
-    setForm({ name: '', price: '', basePrepTimeMinutes: '', category: 'snack', complexity: 'simple' });
-    setShowAdd(false);
-  };
-
-  if (loading) return <div className="p-8 text-center"><div className="w-10 h-10 border-2 border-green-500/20 border-t-green-500 rounded-full animate-spin mx-auto"></div></div>;
+  useEffect(() => {
+    if (user?.vendorProfile) {
+      fetchMenu(user.vendorProfile);
+    }
+  }, [user, fetchMenu]);
 
   return (
-    <div className="max-w-2xl mx-auto p-4 pb-20">
-      <div className="flex justify-between items-center mb-6 pt-2">
-        <h1 className="text-3xl font-black text-white">Menu</h1>
+    <div className="max-w-4xl mx-auto p-6 lg:p-12 pb-24">
+      <header className="flex justify-between items-end mb-16 border-b border-ferro-black/10 pb-8">
+        <div>
+          <span className="text-[10px] font-black tracking-[0.4em] text-ferro-black/40 uppercase">Provisioning_Module</span>
+          <h1 className="text-5xl font-black tracking-tighter uppercase mt-2">Inventory</h1>
+        </div>
         <button onClick={() => setShowAdd(!showAdd)}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-            showAdd ? 'bg-white/10 text-gray-300 border border-white/10' : 'bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-lg shadow-green-600/20'
-          }`}>
-          {showAdd ? 'Cancel' : '+ Add Item'}
+          className={`px-10 py-3 text-[10px] font-black tracking-widest uppercase transition-colors ${showAdd ? 'bg-ferro-black text-white' : 'bg-ferro-orange text-white'
+            }`}>
+          {showAdd ? 'CLOSE_MANIFEST' : 'ADD_NEW_UNIT [+]'}
         </button>
-      </div>
+      </header>
 
-      {showAdd && (
-        <form onSubmit={handleAdd} className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6 space-y-3">
-          <input type="text" placeholder="Item name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required
-            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 text-sm outline-none focus:ring-2 focus:ring-green-500/50" />
-          <div className="grid grid-cols-2 gap-3">
-            <input type="number" placeholder="Price (₹)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required
-              className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 text-sm outline-none focus:ring-2 focus:ring-green-500/50" />
-            <input type="number" placeholder="Prep time (min)" value={form.basePrepTimeMinutes} onChange={(e) => setForm({ ...form, basePrepTimeMinutes: e.target.value })} required
-              className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 text-sm outline-none focus:ring-2 focus:ring-green-500/50" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-300 text-sm outline-none">
-              {['snack', 'beverage', 'meal', 'dessert', 'combo'].map((c) => <option key={c} value={c} className="bg-gray-900">{c}</option>)}
-            </select>
-            <select value={form.complexity} onChange={(e) => setForm({ ...form, complexity: e.target.value })}
-              className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-300 text-sm outline-none">
-              {['simple', 'medium', 'complex'].map((c) => <option key={c} value={c} className="bg-gray-900">{c}</option>)}
-            </select>
-          </div>
-          <button type="submit" className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-green-600/20">
-            Add Item
-          </button>
-        </form>
-      )}
-
-      <div className="space-y-2">
+      {/* Grid-based Item List */}
+      <div className="grid gap-px bg-ferro-black/10 border border-ferro-black/10">
         {items.map((item) => (
-          <div key={item._id} className={`bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-center transition ${!item.isAvailable ? 'opacity-40' : ''}`}>
+          <div key={item._id} className={`bg-white p-8 flex justify-between items-center group ${!item.isAvailable ? 'opacity-30' : ''}`}>
             <div>
-              <p className="font-medium text-white">{item.name}</p>
-              <div className="flex gap-2 mt-1 text-xs text-gray-500">
-                <span>₹{item.price}</span>
-                <span>· {item.basePrepTimeMinutes}m</span>
-                <span>· {item.category}</span>
-                <span className={`px-1.5 rounded ${
-                  item.complexity === 'complex' ? 'bg-red-500/10 text-red-400' :
-                  item.complexity === 'medium' ? 'bg-yellow-500/10 text-yellow-400' :
-                  'bg-green-500/10 text-green-400'
-                }`}>{item.complexity}</span>
+              <p className="text-2xl font-black uppercase tracking-tight text-ferro-black group-hover:text-ferro-orange transition-colors">{item.name}</p>
+              <div className="flex gap-6 mt-3 text-[9px] font-black text-ferro-black/40 uppercase tracking-widest">
+                <span>PRICE / ₹{item.price}</span>
+                <span>LATENCY / {item.basePrepTimeMinutes}M</span>
+                <span className={`px-2 py-0.5 border ${item.complexity === 'complex' ? 'border-ferro-orange text-ferro-orange' : 'border-ferro-black/20'}`}>
+                  CX_{item.complexity?.toUpperCase()}
+                </span>
               </div>
             </div>
             <button onClick={() => toggleAvailability(item._id)}
-              className={`text-xs px-3 py-1.5 rounded-full font-semibold transition ${
-                item.isAvailable ? 'bg-green-500/20 text-green-400 border border-green-500/20 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/20 hover:bg-red-500/30'
-              }`}>
-              {item.isAvailable ? 'Available' : 'Unavailable'}
+              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest border transition-colors ${item.isAvailable ? 'border-ferro-black text-ferro-black hover:bg-ferro-black hover:text-white' : 'border-ferro-orange text-ferro-orange'
+                }`}>
+              {item.isAvailable ? 'OFFLINE_MODE' : 'ONLINE_MODE'}
             </button>
           </div>
         ))}

@@ -23,103 +23,88 @@ export default function Login() {
       const user = await login(email, password);
       navigate(user.role === 'vendor' ? '/vendor/dashboard' : '/student/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      setError(`[AUTH_ERR] ${err.response?.data?.error || 'INVALID_CREDENTIALS'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const accent = isVendor ? 'green' : 'blue';
-
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background glow */}
-      <div className={`absolute top-0 right-0 w-[500px] h-[500px] bg-${accent}-600 rounded-full filter blur-[200px] opacity-10`}></div>
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600 rounded-full filter blur-[180px] opacity-10"></div>
-
-      <div className="max-w-sm w-full relative z-10">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white mb-8 transition">
-          ← Back to home
+    <div className="min-h-screen bg-ferro-mint flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="max-w-md w-full relative z-10">
+        <Link to="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-ferro-black/40 hover:text-ferro-black mb-12 transition-colors">
+          [ ← ] RETURN_TO_HOME
         </Link>
 
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-          <div className="text-center mb-8">
-            <div className={`w-16 h-16 bg-gradient-to-br ${isVendor ? 'from-green-500 to-emerald-600' : 'from-blue-500 to-purple-600'} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-${accent}-500/30`}>
-              <span className="text-3xl">{isVendor ? '👨‍🍳' : '🎓'}</span>
+        <div className="bg-white border border-ferro-black/10 p-10 lg:p-16 shadow-2xl">
+          <div className="text-center mb-12">
+            <div className="w-12 h-12 bg-ferro-black flex items-center justify-center mx-auto mb-6 text-white text-xs font-black">
+              {isVendor ? 'VN' : 'ST'}
             </div>
-            <h1 className="text-2xl font-bold text-white">
-              {isVendor ? 'Vendor Login' : 'Student Login'}
+            <h1 className="text-4xl font-black text-ferro-black uppercase tracking-tighter">
+              {isVendor ? 'Vendor_Portal' : 'Student_Login'}
             </h1>
-            <p className="text-sm text-gray-400 mt-1">
-              Welcome back to CanteenRush
+            <p className="text-[10px] font-bold text-ferro-black/40 uppercase tracking-widest mt-2">
+              Authentication Required / v2.6
             </p>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-3 rounded-xl mb-6">
+            <div className="bg-ferro-orange/10 border border-ferro-orange/20 text-ferro-orange text-[10px] font-black uppercase tracking-widest p-4 mb-8">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
+              <label className="block text-[9px] font-black text-ferro-black/40 uppercase tracking-[0.2em] mb-2">Network_ID / Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder={isVendor ? 'raj@vendor.com' : 'amit@student.com'}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 focus:border-transparent outline-none transition"
+                className="w-full px-0 py-3 bg-transparent border-b-2 border-ferro-black/10 rounded-none text-ferro-black font-bold focus:border-ferro-orange outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Password</label>
+              <label className="block text-[9px] font-black text-ferro-black/40 uppercase tracking-[0.2em] mb-2">Security_Code / Pass</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="••••••••"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 focus:border-transparent outline-none transition"
+                className="w-full px-0 py-3 bg-transparent border-b-2 border-ferro-black/10 rounded-none text-ferro-black font-bold focus:border-ferro-orange outline-none transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3.5 rounded-xl text-white font-semibold disabled:opacity-50 transition-all shadow-lg ${
-                isVendor
-                  ? 'bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 shadow-green-600/30'
-                  : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-blue-600/30'
-              }`}
+              className="w-full py-4 bg-ferro-black text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-ferro-orange transition-colors disabled:opacity-50"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'INITIALIZING_SESSION...' : 'GRANT_ACCESS [ → ]'}
             </button>
           </form>
 
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-white/10"></div>
-            <span className="text-xs text-gray-600">or</span>
-            <div className="flex-1 h-px bg-white/10"></div>
-          </div>
+          <div className="mt-12 pt-8 border-t border-ferro-black/5 text-center">
+            <p className="text-[10px] font-bold text-ferro-black/40 uppercase tracking-widest">
+              No account?{' '}
+              <Link
+                to={isVendor ? '/register/vendor' : '/register/student'}
+                className="text-ferro-black underline underline-offset-4 hover:text-ferro-orange"
+              >
+                DEPLOY_NEW_PROFILE
+              </Link>
+            </p>
 
-          <p className="text-center text-sm text-gray-500">
-            Don't have an account?{' '}
-            <Link
-              to={isVendor ? '/register/vendor' : '/register/student'}
-              className={`font-semibold ${isVendor ? 'text-green-400 hover:text-green-300' : 'text-blue-400 hover:text-blue-300'}`}
+            <Link 
+              to={`/login?role=${isVendor ? 'student' : 'vendor'}`} 
+              className="block mt-6 text-[9px] font-black text-ferro-orange uppercase tracking-widest hover:underline"
             >
-              Sign up
+              Switch_Role / {isVendor ? 'Student' : 'Vendor'}
             </Link>
-          </p>
-
-          <p className="text-center text-xs text-gray-600 mt-4">
-            <Link to={`/login?role=${isVendor ? 'student' : 'vendor'}`} className="hover:text-gray-400 transition">
-              Login as {isVendor ? 'student' : 'vendor'} instead →
-            </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
 const Vendor = require('../models/Vendor');
 const predictionEngine = require('../services/predictionEngine');
+const geminiService = require('../services/geminiService'); // 🟢 ADDED THIS
 const queueManager = require('../services/queueManager');
 const notificationService = require('../services/notificationService');
 const { auth, requireRole } = require('../middleware/auth');
@@ -18,14 +19,16 @@ router.post('/', auth, requireRole('student'), async (req, res) => {
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
     if (!vendor.isOpen) return res.status(400).json({ error: 'Vendor is closed' });
 
-    // Calculate price
+    // 1. Get the full details of the items first
     const menuItems = await MenuItem.find({ _id: { $in: items.map(i => i.menuItem) } });
+
+    // 2. Calculate price (Moved up so it's ready for the Order model)
     const totalPrice = items.reduce((total, item) => {
-      const mi = menuItems.find(m => m._id.toString() === item.menuItem);
+      const mi = menuItems.find(m => m._id.toString() === item.menuItem.toString());
       return total + (mi?.price || 0) * (item.quantity || 1);
     }, 0);
 
-    // AI Prediction
+    // 3. AI Prediction (Now it has context via predictionEngine)
     const prediction = await predictionEngine.predictReadyTime({ items }, vendorId);
 
     const order = new Order({
@@ -39,7 +42,7 @@ router.post('/', auth, requireRole('student'), async (req, res) => {
       prediction: {
         estimatedPrepMinutes: prediction.estimatedMinutes,
         queuePositionAtOrder: prediction.queuePosition,
-        vendorLoadAtOrder: vendor.currentLoad.activeOrders,
+        vendorLoadAtOrder: vendor.currentLoad?.activeOrders || 0,
         confidenceScore: prediction.confidence,
         method: prediction.method,
         geminiReasoning: prediction.reasoning,
@@ -85,7 +88,6 @@ router.post('/', auth, requireRole('student'), async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 // ── Student: Active Orders ───────────────────────────────
 router.get('/active', auth, requireRole('student'), async (req, res) => {
   try {
@@ -194,35 +196,26 @@ router.post('/collect/:token', auth, requireRole('vendor'), async (req, res) => 
 });
 
 // ── Vendor: History + Stats ──────────────────────────────
-router.get('/vendor/history', auth, requireRole('vendor'), async (req, res) => {
-  try {
-    const days = parseInt(req.query.days) || 7;
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-
-    const orders = await Order.find({
-      vendor: req.user.vendorProfile, placedAt: { $gte: since },
-    }).populate('items.menuItem', 'name').sort({ placedAt: -1 });
-
-    const completed = orders.filter(o => o.status === 'collected');
-    const avgPrepTime = completed.length > 0
-      ? completed.reduce((s, o) => {
-          const prep = o.actualReadyTime && o.placedAt
-            ? (o.actualReadyTime - o.placedAt) / 60000 : 0;
-          return s + prep;
-        }, 0) / completed.length
-      : 0;
-
-    res.json({
-      orders,
-      stats: {
-        totalOrders: orders.length,
-        completed: completed.length,
-        cancelled: orders.filter(o => o.status === 'cancelled').length,
-        avgPrepTimeMinutes: Math.round(avgPrepTime * 10) / 10,
-      },
-    });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+router.get('/test-ai', async (req, res) => {
+  const result = await geminiService.predictPrepTime({
+    items: [{ name: 'Samosa', quantity: 2 }],
+    totalItemCount: 2,
+    itemComplexities: ['simple'],
+    basePrepTimes: [5],
+    vendorName: "Test Shop",
+    activeOrders: 1,
+    queueDepth: 0,
+    maxConcurrent: 5,
+    vendorAvgPrepTime: 5,
+    currentTime: new Date().toISOString(),
+    dayOfWeek: "monday",
+    isRushHour: false,
+    avgPredictionError: 0,
+    rushMultiplier: 1.2,
+    recentTrend: "accurate",
+    recentCompletedOrders: []
+  });
+  res.json({ success: !!result, data: result });
 });
 
 module.exports = router;

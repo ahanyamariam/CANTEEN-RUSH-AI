@@ -23,7 +23,7 @@ import VendorDashboard from './pages/vendor/VendorDashboard';
 import LiveQueue from './pages/vendor/LiveQueue';
 import MenuManager from './pages/vendor/MenuManager';
 import OrderHistory from './pages/vendor/OrderHistory';
-
+import Analytics from './pages/vendor/Analytics';
 function AppRoutes() {
   return (
     <>
@@ -68,6 +68,9 @@ function AppRoutes() {
         } />
         <Route path="/vendor/history" element={
           <ProtectedRoute role="vendor"><OrderHistory /></ProtectedRoute>
+        } />
+        <Route path="/vendor/analytics" element={
+          <ProtectedRoute role="vendor"><Analytics /></ProtectedRoute>
         } />
 
         {/* Fallback */}

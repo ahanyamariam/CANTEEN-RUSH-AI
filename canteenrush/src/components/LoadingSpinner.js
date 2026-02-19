@@ -1,11 +1,12 @@
 import React from 'react';
 
-export default function LoadingSpinner({ message = 'Loading...' }) {
+export default function LoadingSpinner({ message = 'SYSTEM_BOOT' }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-ferro-offwhite">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-        <p className="mt-4 text-gray-500 text-sm">{message}</p>
+        {/* Sharp, fast spinner in Ferro Orange */}
+        <div className="w-10 h-10 border-2 border-ferro-black/10 border-t-ferro-orange animate-spin mx-auto" />
+        <p className="mt-6 text-ferro-black font-black text-[10px] uppercase tracking-[0.3em]">{message}</p>
       </div>
     </div>
   );
