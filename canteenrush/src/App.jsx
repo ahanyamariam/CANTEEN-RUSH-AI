@@ -17,6 +17,7 @@ import BrowseVendors from './pages/student/BrowseVendors';
 import VendorMenu from './pages/student/VendorMenu';
 import OrderConfirmation from './pages/student/OrderConfirmation';
 import ActiveOrders from './pages/student/ActiveOrders';
+import ChatBot from './components/ChatBot';
 
 // Vendor pages
 import VendorDashboard from './pages/vendor/VendorDashboard';

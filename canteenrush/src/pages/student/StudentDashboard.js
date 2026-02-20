@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useActiveOrders } from '../../hooks/useOrders';
+import ChatBot from '../../components/ChatBot';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ export default function StudentDashboard() {
   };
 
   return (
+    
     <div className="max-w-4xl mx-auto p-6 lg:p-12 pb-24">
       <header className="mb-12 border-b border-ferro-black/10 pb-8 flex justify-between items-end">
         <div>
@@ -86,6 +88,7 @@ export default function StudentDashboard() {
           </div>
         )}
       </section>
+      <ChatBot />
     </div>
   );
 }
