@@ -31,10 +31,10 @@ export default function RegisterStudent() {
 
   const fields = [
     { key: 'name', label: 'Full_Name', type: 'text' },
-    { key: 'email', label: 'Network_Email', type: 'email' },
-    { key: 'phone', label: 'Contact_Protocol', type: 'tel' },
-    { key: 'password', label: 'Secret_Key', type: 'password' },
-    { key: 'confirmPassword', label: 'Verify_Key', type: 'password' },
+    { key: 'email', label: 'Email', type: 'email' },
+    { key: 'phone', label: 'Phone Number', type: 'tel' },
+    { key: 'password', label: 'Password', type: 'password' },
+    { key: 'confirmPassword', label: 'Confirm Password', type: 'password' },
   ];
 
   return (

@@ -8,7 +8,7 @@ export default function OrderConfirmation() {
   if (!order) return <Navigate to="/student/dashboard" replace />;
 
   // Logic: Handles the professional NODE_0X formatting
-  const nodeLabel = `NODE_${String(order.queuePosition || 1).padStart(2, '0')}`;
+  const nodeLabel = `${String(order.queuePosition || 1).padStart(2, '0')}`;
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] p-6 lg:p-12 flex flex-col items-center font-sans">
