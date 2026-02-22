@@ -24,6 +24,7 @@ University canteen breaks are **45 minutes long**. Students spend **15–25 minu
 | **Token-Based Pickup** | Unique 8-char token — show at counter, grab food, zero waiting |
 | **Order History** | View all past and active orders |
 | **Push Notifications** | Browser notification when your order is ready |
+| **Chat Bot** | Ask questions about the menu, orders, and order through AI |
 
 ### For Vendors 👨‍🍳
 
@@ -37,16 +38,7 @@ University canteen breaks are **45 minutes long**. Students spend **15–25 minu
 | **AI Analytics** | Demand pattern analysis, prediction accuracy tracking |
 | **Shop Toggle** | Open/close your shop with one tap |
 
-### AI & Intelligence 🤖
 
-| Feature | Description |
-|---------|-------------|
-| **Hybrid Prediction** | Combines deterministic rules + Gemini AI for accuracy |
-| **Context-Aware** | Considers queue depth, vendor load, item complexity, rush hours |
-| **Self-Improving** | Logs predicted vs actual times, feeds accuracy data back into prompts |
-| **Demand Analysis** | AI identifies peak hours, recommends prep-ahead items |
-| **Queue Optimization** | AI suggests optimal preparation sequence |
-| **Graceful Fallback** | Works without AI — deterministic engine takes over if Gemini is unavailable |
 
 ---
 
@@ -116,16 +108,6 @@ npm run dev
 npm start
 
 
-cd backend
-
-# Test Gemini API connection
-npm run test:gemini
-
-# Simulate a full order with AI prediction
-npm run simulate
-
-# Load test with 5 concurrent orders
-npm run loadtest
 
 
 CanteenRush — Because your break time is too short to waste in a queue.
